@@ -4,5 +4,6 @@ starając się jednocześnie zminimalizować czas wykonania - makespan, czyli ca
 W specyficznym wariancie znanym jako harmonogramowanie otwarte (open-shop scheduling), każde zadanie składa się z zestawu operacji O1, O2, ..., On, które muszą być przetwarzane w dowolnej kolejności.
 
 **Uruchomienie programu z linii komend**
+
 Hill Climbing oraz Tabu Search (zaimplementowany również full search): python.exe open_shop_scheduling.py --jobs 100 --machines 20 --iterations 10000 --tabu_size 20
 Genethic Algorithm: python.exe genethic_alghoritm.py --jobs 500 --machines 20
