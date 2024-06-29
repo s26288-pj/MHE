@@ -6,7 +6,12 @@ Open Shop Scheduling - czyli problem harmonogramowania otwartego (OSSP), to prob
 
 To run the program from the command line, use the following commands:
 
-### Hill Climbing and Tabu Search
+### Hill Climbing and Tabu Search and optionally Brute Force
 
 ```bash
-python.exe open_shop_scheduling.py --jobs 100 --machines 20 --iterations 10000 --tabu_size 20
+python.exe open_shop_scheduling.py --jobs 100 --machines 20 --iterations 10000 --tabu_size 200 --brute_force True
+
+### Genethic Algorithm
+
+```bash
+python.exe genethic_alghoritm.py --machines 10 --jobs 20 --num_generations 100
