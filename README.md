@@ -9,10 +9,10 @@ To run the program from the command line, use the following commands:
 ### Hill Climbing and Tabu Search and optionally Brute Force
 
 ```bash
-python.exe open_shop_scheduling.py --jobs 100 --machines 20 --iterations 10000 --tabu_size 200 --brute_force True
+python.exe open_shop_scheduling.py --jobs 10 --machines 5 --iterations 1000 --tabu_size 1000 --full_search True
 ```
 ### Genethic Algorithm
 
 ```bash
-python.exe genethic_alghoritm.py --machines 10 --jobs 20 --num_generations 100
+python.exe genethic_alghoritm.py --machines 5 --jobs 10 --pop_size 100 --num_generations 100 --num_parents 50 --num_offsprings 50 --mutation_rate 0.1 --crossover_points 2   
 ```
