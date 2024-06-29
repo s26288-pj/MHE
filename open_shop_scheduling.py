@@ -1,23 +1,43 @@
 import itertools
 import random
 import time
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import pandas as pd
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def generate_random_solution(num_machines, num_jobs):
     """ Generate random solution for Open Shop Scheduling.
 
-    :param num_jobs: number of jobs to be distributed among machines
     :param num_machines: number of devices that will be responsible for finishing jobs
+    :param num_jobs: number of jobs to be distributed among machines
     """
     random_solution = {}
     for i in range(1, num_machines+1):
         random_solution[f"Machine_{i}"] = np.random.permutation(range(1, num_jobs + 1))
     data_frame = pd.DataFrame(random_solution)
     return data_frame
+
+
+def generate_all_solutions(num_machines, num_jobs):
+    """ Generate all possible solutions for Open Shop Scheduling.
+
+    :param num_machines: number of devices that will be responsible for finishing jobs
+    :param num_jobs: number of jobs to be distributed among machines
+    """
+    job_permutations = list(itertools.permutations(range(1, num_jobs + 1)))
+    all_solutions = list(itertools.product(job_permutations, repeat=num_machines))
+
+    solutions = []
+    for solution in all_solutions:
+        solution_dict = {f"Machine_{i + 1}": solution[i] for i in range(num_machines)}
+        data_frame = pd.DataFrame(solution_dict)
+        solutions.append(data_frame)
+
+    return solutions
 
 
 def generate_neighbours(solution, num_machines):
@@ -46,8 +66,8 @@ def generate_neighbours(solution, num_machines):
 def generate_jobs(num_machines, num_jobs):
     """ Generates jobs with random execution times for each machine.
 
-    :param num_jobs: number of jobs that is distributed among devices
     :param num_machines: number of machines used for Open Shop Scheduling
+    :param num_jobs: number of jobs that is distributed among devices
     """
     solution_execution_time = {}
     for i in range(1, num_machines+1):
@@ -59,11 +79,11 @@ def generate_jobs(num_machines, num_jobs):
 def simulate_job_execution(solution, processing_times):
     schedule = solution.copy()
     num_jobs = len(schedule["Machine_1"])
-    current_tasks = {machine: schedule[machine][0] for machine in schedule.columns}
-    wait_time = {machine: 0 for machine in schedule.columns}
-    execution_time = {machine: 0 for machine in schedule.columns}
-    executed_tasks = {machine: 0 for machine in schedule.columns}
-    is_task_waiting = {machine: False for machine in schedule.columns}
+    current_tasks = {machine: schedule[machine][0] for machine in schedule}
+    wait_time = {machine: 0 for machine in schedule}
+    execution_time = {machine: 0 for machine in schedule}
+    executed_tasks = {machine: 0 for machine in schedule}
+    is_task_waiting = {machine: False for machine in schedule}
 
     def is_task_waiting_for_execution():
         for task in current_tasks.values():
@@ -76,10 +96,10 @@ def simulate_job_execution(solution, processing_times):
                     is_task_waiting[machine] = True
 
     is_task_waiting_for_execution()
-    time = 1
+    timer = 0
 
     while True:
-        for machine in schedule.columns:
+        for machine in schedule:
             current_job = current_tasks[machine]
             if current_job != 0:
                 job_time = processing_times[machine][current_job - 1]
@@ -92,7 +112,7 @@ def simulate_job_execution(solution, processing_times):
             if is_task_waiting[machine]:
                 wait_time[machine] += 1
 
-            if time == execution_time[machine] + job_time + wait_time[machine]:
+            if timer == execution_time[machine] + job_time + wait_time[machine]:
                 executed_tasks[machine] += 1
                 execution_time[machine] = execution_time[machine] + job_time + wait_time[machine]
                 wait_time[machine] = 0
@@ -102,7 +122,7 @@ def simulate_job_execution(solution, processing_times):
                     current_tasks[machine] = schedule[machine][executed_tasks[machine]]
                 is_task_waiting_for_execution()
 
-        time += 1
+        timer += 1
 
         if all(value == num_jobs for value in executed_tasks.values()):
             break
@@ -111,9 +131,10 @@ def simulate_job_execution(solution, processing_times):
 
 
 def display_schedule(total_times, title):
-    """ Displays graphs that help compairing different solutions.
+    """ Displays graphs that help comparing different solutions.
 
     :param total_times: current total time of job execution
+    :param title: title of th graph to be displayed
     """
     plt.ion()
     fig, ax = plt.subplots()
@@ -159,7 +180,6 @@ def tabu_search(initial_solution, processing_times, num_machines, tabu_size=10, 
 
     :param initial_solution: current solution
     :param processing_times: table of processing times of the jobs for each machine
-    :param num_jobs: number of jobs that is distributed among devices
     :param num_machines: number of machines used for Open Shop Scheduling
     :param tabu_size: size of elements that will be unavailable for re-calculations
     :param max_iterations: number of maximum iterations allowed by algorithm
@@ -203,6 +223,29 @@ def tabu_search(initial_solution, processing_times, num_machines, tabu_size=10, 
     print(f"Final total time: {best_time:.4f}")
 
     return best_solution, best_time, total_time
+
+
+def brute_force(num_machines, num_jobs):
+    """ Brute force algorithm function.
+
+    :param num_machines: number of machines used for Open Shop Scheduling
+    :param num_jobs: number of jobs that is distributed among devices
+    """
+    best_time = 10000
+    solutions = generate_all_solutions(num_machines, num_jobs)
+    processing_times = generate_jobs(num_machines=num_machines, num_jobs=num_jobs)
+
+    start_time = time.time()
+
+    for solution in solutions:
+        solution_time = simulate_job_execution(solution, processing_times)
+        if solution_time < best_time:
+            best_time = solution_time
+
+    end_time = time.time()
+    print(f"Execution time: {end_time - start_time:.4f} seconds")
+
+    return best_time
 
 
 def compare_algorithms(num_machines, num_jobs, iterations, tabu_size, show_plots):
@@ -250,7 +293,11 @@ if __name__ == "__main__":
     parser.add_argument('--iterations', type=int, default=1000, help='Number of iterations for Hill Climbing and Tabu Search')
     parser.add_argument('--tabu_size', type=int, default=10, help='Size of tabu list for Tabu Search')
     parser.add_argument('--show_plots', type=bool, default=True, help='Show plots during optimization')
+    parser.add_argument('--brute_force', type=bool, default=False, help='Test brute force algorithm for OSS')
 
     args = parser.parse_args()
 
     compare_algorithms(args.machines, args.jobs, args.iterations, args.tabu_size, args.show_plots)
+    if args.brute_force:
+        print("Running Brute Force Search...")
+        print(f"Brute force best time for 3 machines with 4 tasks: {brute_force(3, 4)}")
