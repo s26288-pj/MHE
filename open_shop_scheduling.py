@@ -143,7 +143,7 @@ def display_schedule(total_times, title):
     ax.set_ylabel('Max Execution Time')
     ax.set_title(title)
     ax.legend()
-    plt.ioff()
+    plt.pause(0.01)
     plt.show()
 
 
@@ -301,3 +301,5 @@ if __name__ == "__main__":
     if args.full_search:
         print("Running Full Search...")
         print(f"Brute force best time for 3 machines with 4 tasks: {full_search(3, 4)}")
+
+    time.sleep(30)

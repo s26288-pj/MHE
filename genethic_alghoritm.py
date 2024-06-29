@@ -64,8 +64,8 @@ def crossover(parents, num_offsprings, num_points):
     return offsprings
 
 
-def mutation(offsprings, mutation_rate, num_machines):
-    """ Apply mutation to offspring schedules.
+def swap_mutation(offsprings, mutation_rate, num_machines):
+    """ Apply swap mutation to offspring schedules.
 
     :param offsprings: List of offspring schedules.
     :param mutation_rate: Probability of mutation for each job.
@@ -81,8 +81,24 @@ def mutation(offsprings, mutation_rate, num_machines):
     return offsprings
 
 
+def inversion_mutation(offsprings, mutation_rate, num_machines):
+    """ Apply inversion mutation to offspring schedules.
+
+    :param offsprings: List of offspring schedules.
+    :param mutation_rate: Probability of mutation for each job.
+    :param num_machines: Number of machines available for scheduling.
+    :return: A list of mutated offspring schedules.
+    """
+    for offspring in offsprings:
+        for idx in range(1, num_machines + 1):
+            if random.random() < mutation_rate:
+                start, end = sorted(random.sample(range(len(offspring[f"Machine_{idx}"])), 2))
+                offspring[f"Machine_{idx}"].iloc[start:end] = offspring[f"Machine_{idx}"].iloc[start:end][::-1]
+    return offsprings
+
+
 def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, num_generations=100, num_parents=50,
-                      num_offsprings=50, mutation_rate=0.1, crossover_points=1, show_plots=True):
+                      num_offsprings=50, mutation_rate=0.1, crossover_points=1, mutation_method="swap", show_plots=True):
     """ Genetic Algorithm for solving the open-shop scheduling problem.
 
     :param processing_times: Matrix of processing times for jobs on machines.
@@ -94,6 +110,7 @@ def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, nu
     :param num_offsprings: Number of offspring to produce in each generation.
     :param mutation_rate: Probability of mutation for each job.
     :param crossover_points: Number of reference points for crossover.
+    :param mutation_method: Method used for mutation of offsprings.
     :param show_plots: Boolean indicating whether to display plots during optimization.
     :return: The best schedule found, its total time, and a list of best times over generations.
     """
@@ -114,7 +131,13 @@ def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, nu
 
         parents = selection(population, fitness, num_parents)
         offsprings = crossover(parents, num_offsprings, crossover_points)
-        offsprings = mutation(offsprings, mutation_rate, num_machines)
+
+        if mutation_method == 'swap':
+            offsprings = swap_mutation(offsprings, mutation_rate, num_machines)
+        elif mutation_method == 'inversion':
+            offsprings = inversion_mutation(offsprings, mutation_rate, num_machines)
+        else:
+            raise ValueError("Invalid mutation method")
 
         population = parents + offsprings
 
@@ -151,6 +174,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_offsprings', type=int, default=50, help='Number of offsprings to produce')
     parser.add_argument('--mutation_rate', type=float, default=0.1, help='Mutation rate')
     parser.add_argument('--crossover_points', type=int, default=2, help='Number of reference points for crossover')
+    parser.add_argument('--mutation_method', type=str, default='swap', choices=['swap', 'inversion'], help='Mutation method to use')
     parser.add_argument('--show_plots', action="store_true", help='Show plots during optimization')
 
     args = parser.parse_args()
@@ -164,6 +188,7 @@ if __name__ == "__main__":
                                                           num_offsprings=args.num_offsprings,
                                                           mutation_rate=args.mutation_rate,
                                                           crossover_points=args.crossover_points,
+                                                          mutation_method=args.mutation_method,
                                                           show_plots=args.show_plots)
 
     if not args.show_plots:
