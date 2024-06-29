@@ -43,18 +43,23 @@ def selection(population, fitness, num_parents):
     return [population[idx] for idx in selected_indices]
 
 
-def crossover(parents, num_offsprings):
+def crossover(parents, num_offsprings, num_points):
     """ Perform crossover to generate offspring schedules.
 
     :param parents: List of parent schedules.
     :param num_offsprings: Number of offspring to produce.
+    :param num_points: Number of reference points for crossover. Can be 1 or 2.
     :return: A list of offspring schedules.
     """
     offsprings = []
     for _ in range(num_offsprings):
         parent1, parent2 = random.sample(parents, 2)
-        crossover_point = random.randint(1, len(parent1["Machine_1"]))
-        offspring = pd.concat((parent1.copy().iloc[:crossover_point], parent2.copy().iloc[crossover_point:]))
+        if num_points == 1:
+            crossover_point = random.randint(1, len(parent1["Machine_1"]))
+            offspring = pd.concat((parent1.copy().iloc[:crossover_point], parent2.copy().iloc[crossover_point:]))
+        else:
+            point1, point2 = sorted(random.sample(range(1, len(parent1["Machine_1"]) - 1), 2))
+            offspring = pd.concat((parent1.copy().iloc[:point1], parent2.copy().iloc[point1:point2], parent1.copy().iloc[point2:]))
         offsprings.append(offspring)
     return offsprings
 
@@ -77,7 +82,7 @@ def mutation(offsprings, mutation_rate, num_machines):
 
 
 def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, num_generations=100, num_parents=50,
-                      num_offsprings=50, mutation_rate=0.1, show_plots=True):
+                      num_offsprings=50, mutation_rate=0.1, crossover_points=1, show_plots=True):
     """ Genetic Algorithm for solving the open-shop scheduling problem.
 
     :param processing_times: Matrix of processing times for jobs on machines.
@@ -88,6 +93,7 @@ def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, nu
     :param num_parents: Number of parents to select for crossover.
     :param num_offsprings: Number of offspring to produce in each generation.
     :param mutation_rate: Probability of mutation for each job.
+    :param crossover_points: Number of reference points for crossover.
     :param show_plots: Boolean indicating whether to display plots during optimization.
     :return: The best schedule found, its total time, and a list of best times over generations.
     """
@@ -107,7 +113,7 @@ def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, nu
             plt.pause(0.1)
 
         parents = selection(population, fitness, num_parents)
-        offsprings = crossover(parents, num_offsprings)
+        offsprings = crossover(parents, num_offsprings, crossover_points)
         offsprings = mutation(offsprings, mutation_rate, num_machines)
 
         population = parents + offsprings
@@ -138,12 +144,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Genetic Algorithm for Open-shop Scheduling')
     parser.add_argument('--machines', type=int, default=5, help='Number of machines')
-    parser.add_argument('--jobs', type=int, default=7, help='Number of jobs')
+    parser.add_argument('--jobs', type=int, default=10, help='Number of jobs')
     parser.add_argument('--pop_size', type=int, default=100, help='Population size')
     parser.add_argument('--num_generations', type=int, default=100, help='Number of generations')
     parser.add_argument('--num_parents', type=int, default=50, help='Number of parents to select')
     parser.add_argument('--num_offsprings', type=int, default=50, help='Number of offsprings to produce')
     parser.add_argument('--mutation_rate', type=float, default=0.1, help='Mutation rate')
+    parser.add_argument('--crossover_points', type=int, default=2, help='Number of reference points for crossover')
     parser.add_argument('--show_plots', action="store_true", help='Show plots during optimization')
 
     args = parser.parse_args()
@@ -156,6 +163,7 @@ if __name__ == "__main__":
                                                           num_parents=args.num_parents,
                                                           num_offsprings=args.num_offsprings,
                                                           mutation_rate=args.mutation_rate,
+                                                          crossover_points=args.crossover_points,
                                                           show_plots=args.show_plots)
 
     if not args.show_plots:

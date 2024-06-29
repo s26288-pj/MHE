@@ -225,8 +225,8 @@ def tabu_search(initial_solution, processing_times, num_machines, tabu_size=10, 
     return best_solution, best_time, total_time
 
 
-def brute_force(num_machines, num_jobs):
-    """ Brute force algorithm function.
+def full_search(num_machines, num_jobs):
+    """ Full search algorithm function.
 
     :param num_machines: number of machines used for Open Shop Scheduling
     :param num_jobs: number of jobs that is distributed among devices
@@ -291,13 +291,13 @@ if __name__ == "__main__":
     parser.add_argument('--jobs', type=int, default=10, help='Number of jobs')
     parser.add_argument('--machines', type=int, default=5, help='Number of machines')
     parser.add_argument('--iterations', type=int, default=1000, help='Number of iterations for Hill Climbing and Tabu Search')
-    parser.add_argument('--tabu_size', type=int, default=10, help='Size of tabu list for Tabu Search')
+    parser.add_argument('--tabu_size', type=int, default=1000, help='Size of tabu list for Tabu Search')
+    parser.add_argument('--full_search', type=bool, default=False, help='Test Full Search algorithm for OSS')
     parser.add_argument('--show_plots', type=bool, default=True, help='Show plots during optimization')
-    parser.add_argument('--brute_force', type=bool, default=False, help='Test brute force algorithm for OSS')
 
     args = parser.parse_args()
 
     compare_algorithms(args.machines, args.jobs, args.iterations, args.tabu_size, args.show_plots)
-    if args.brute_force:
-        print("Running Brute Force Search...")
-        print(f"Brute force best time for 3 machines with 4 tasks: {brute_force(3, 4)}")
+    if args.full_search:
+        print("Running Full Search...")
+        print(f"Brute force best time for 3 machines with 4 tasks: {full_search(3, 4)}")
