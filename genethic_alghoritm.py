@@ -1,10 +1,12 @@
 import random
 import time
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from open_shop_scheduling import display_schedule, generate_random_solution, simulate_job_execution, generate_jobs
 
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def initialize_population(pop_size, num_machines, num_jobs):
     """ Initialize a population of random solutions.
@@ -180,6 +182,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     processing_times = generate_jobs(args.machines, args.jobs)
+
+    print(f"Running Genethic Algorithm with {args.num_generations} generations, {args.num_parents} parents, \
+        {args.num_offsprings} offsprings, and {args.mutation_rate} mutation rate")
 
     solution, total_time, total_times = genetic_algorithm(processing_times, args.machines, args.jobs,
                                                           pop_size=args.pop_size,

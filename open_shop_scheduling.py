@@ -1,4 +1,5 @@
 import itertools
+import math
 import random
 import time
 import warnings
@@ -248,6 +249,46 @@ def full_search(num_machines, num_jobs):
     return best_time
 
 
+def simulated_annealing(initial_solution, processing_times, num_machines, iterations, show_plots):
+    current_time = simulate_job_execution(initial_solution, processing_times)
+    current_solution = initial_solution
+    best_time = current_time
+    best_solution = current_solution
+
+    total_time = [best_time]
+
+    start_time = time.time()
+
+    for iter in range(iterations):
+        temp = 1 - iter / iterations
+        print(iter)
+        new_solution = generate_random_solution(num_machines, len(current_solution["Machine_1"]))
+        new_time = simulate_job_execution(new_solution, processing_times)
+
+        if new_time < best_time or math.exp((best_time - new_time) / temp) > np.random.rand():
+            current_solution = new_solution
+            current_time = new_time
+
+            if current_time < best_time:
+                best_solution = current_solution
+                best_time = current_time
+
+        total_time.append(current_time)
+
+    end_time = time.time()
+
+    if show_plots:
+        plt.show()
+
+    if show_plots:
+        display_schedule(total_time, "Simulated Annealing")
+
+    print(f"Execution time: {end_time - start_time:.4f} seconds")
+    print(f"Final best time: {best_time:.4f}")
+
+    return best_solution, best_time, total_time
+
+
 def compare_algorithms(num_machines, num_jobs, iterations, tabu_size, show_plots):
     """ Compare the performance of Hill Climbing, Tabu Search, and Full Search algorithms.
 
@@ -279,9 +320,19 @@ def compare_algorithms(num_machines, num_jobs, iterations, tabu_size, show_plots
         show_plots=show_plots
     )
 
+    print("Running Simulated Annealing...")
+    sa_solution, sa_time, sa_total_time = simulated_annealing(
+        initial_solution=initial_solution,
+        processing_times=processing_times,
+        num_machines=num_machines,
+        iterations=iterations,
+        show_plots=show_plots
+    )
+
     # Print results
     print(f"Hill Climbing - Best Time: {hc_time:.4f} - Execution Time: {iterations} iterations")
     print(f"Tabu Search - Best Time: {ts_time:.4f} - Execution Time: {iterations} iterations")
+    print(f"Simulated Annealing - Best Time: {sa_time:.4f} - Execution Time: {iterations} iterations")
 
 
 if __name__ == "__main__":
