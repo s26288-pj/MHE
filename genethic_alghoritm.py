@@ -8,6 +8,7 @@ from open_shop_scheduling import display_schedule, generate_random_solution, sim
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+
 def initialize_population(pop_size, num_machines, num_jobs):
     """ Initialize a population of random solutions.
 
@@ -141,7 +142,7 @@ def genetic_algorithm(processing_times, num_machines, num_jobs, pop_size=100, nu
         else:
             raise ValueError("Invalid mutation method")
 
-        population = parents + offsprings
+        population = offsprings
 
         # Evaluate the best solution in the current generation
         current_best_idx = np.argmax(fitness)

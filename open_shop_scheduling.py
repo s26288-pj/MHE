@@ -64,6 +64,19 @@ def generate_neighbours(solution, num_machines):
     return neighbour1, neighbour2
 
 
+def generate_neighbourhood(initial_solution, num_machines):
+    neighbourhood = []
+    for machine in range(1, num_machines):
+        neighbour = initial_solution.copy()
+        for rand in range(0, len(neighbour["Machine_1"]) - 2):
+            neighbour[f"Machine_{machine}"][rand], neighbour[f"Machine_{machine}"][rand + 1] = \
+                neighbour[f"Machine_{machine}"][rand + 1], neighbour[f"Machine_{machine}"][rand]
+
+            neighbourhood.append(neighbour)
+
+    return neighbourhood
+
+
 def generate_jobs(num_machines, num_jobs):
     """ Generates jobs with random execution times for each machine.
 
@@ -197,21 +210,23 @@ def tabu_search(initial_solution, processing_times, num_machines, tabu_size=10, 
     start_time = time.time()
 
     for _ in range(max_iterations):
-        neighbour1, neighbour2 = generate_neighbours(current_solution, num_machines)
-        neighbour_time = simulate_job_execution(neighbour1, processing_times)
+        neighbourhood = generate_neighbourhood(current_solution, num_machines)
+        neighbourhood_times = []
+        for neighbour in neighbourhood:
+            neighbour_time = simulate_job_execution(neighbour, processing_times)
 
-        if neighbour_time < current_time and not any(df.equals(neighbour1) for df in tabu_list):
-            current_solution = neighbour1.copy()
-            current_time = neighbour_time
+            if neighbour_time < current_time and not any(df.equals(neighbour) for df in tabu_list):
+                current_solution = neighbour.copy()
+                current_time = neighbour_time
 
-            if current_time < best_time:
-                best_solution = current_solution.copy()
-                best_time = current_time
+                if current_time < best_time:
+                    best_solution = current_solution.copy()
+                    best_time = current_time
 
-            # Add the current solution to the tabu list
-            tabu_list.append(current_solution)
-            if len(tabu_list) > tabu_size:
-                tabu_list.pop(0)
+                # Add the current solution to the tabu list
+                tabu_list.append(current_solution)
+                if len(tabu_list) > tabu_size:
+                    tabu_list.pop(0)
 
         total_time.append(current_time)
 
@@ -261,8 +276,7 @@ def simulated_annealing(initial_solution, processing_times, num_machines, iterat
 
     for iter in range(iterations):
         temp = 1 - iter / iterations
-        print(iter)
-        new_solution = generate_random_solution(num_machines, len(current_solution["Machine_1"]))
+        new_solution, tmp = generate_neighbours(current_solution, num_machines)
         new_time = simulate_job_execution(new_solution, processing_times)
 
         if new_time < best_time or math.exp((best_time - new_time) / temp) > np.random.rand():
